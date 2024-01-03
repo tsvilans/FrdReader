@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+.vs
+*.pdb
+*.metagen
+*.vcxproj.user
+FrdReader/x64
