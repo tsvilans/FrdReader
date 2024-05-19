@@ -98,15 +98,17 @@ namespace FrdReader {
 	{
 
 	public:
-		FrdElement(int id, int type, array<int>^ indices)
+		FrdElement(int id, int type, int group, int material, array<int>^ indices)
 		{
 			Id = id;
 			Type = type;
+			Group = group;
+			Material = material;
 			Indices = indices;
 		}
 
 		array<int>^ Indices;
-		int Id, Type;
+		int Id, Type, Group, Material;
 	};
 
 	public ref class FrdResults
@@ -163,6 +165,8 @@ namespace FrdReader {
 
 			std::map<int, int> nodeMap;
 
+			long numAllNodes = -1;
+
 			// Scan buffer
 			while (ptr < end && !kill)
 			{
@@ -206,27 +210,27 @@ namespace FrdReader {
 						array<int>^ indices = gcnew array<int>(nIndices);
 						Marshal::Copy(IntPtr(ptr), indices, 0, nIndices);
 
-						Elements->Add(gcnew FrdElement(hdr.id, hdr.type, indices));
+						Elements->Add(gcnew FrdElement(hdr.id, hdr.type, hdr.group, hdr.material, indices));
 						ptr += nIndices * sizeof(int);
 					}
 				}
 				else if (std::strcmp(code.c_str(), "2C") == 0)
 				{
-					long nNodes = std::stol(ltrim(std::string(ptr + 6, 30)));
+					numAllNodes = std::stol(ltrim(std::string(ptr + 6, 30)));
 
 					//throw gcnew Exception(System::String::Format("number of nodes: {0}", nNodes));
 
 					ptr += line_length;
 					frd_node* nodes_c = (frd_node*)ptr;
-					Nodes = gcnew System::Collections::Generic::List<FrdNode^>(nNodes);
+					Nodes = gcnew System::Collections::Generic::List<FrdNode^>(numAllNodes);
 
-					for (int i = 0; i < nNodes; ++i)
+					for (int i = 0; i < numAllNodes; ++i)
 					{
 						nodeMap[nodes_c[i].id] = i;
 						Nodes->Add(gcnew FrdNode(nodes_c[i].id, nodes_c[i].x, nodes_c[i].y, nodes_c[i].z));
 					}
 
-					ptr += nNodes * sizeof(frd_node);
+					ptr += numAllNodes * sizeof(frd_node);
 				}
 				else if (std::strcmp(code.c_str(), "1P") == 0)
 				{
@@ -278,7 +282,7 @@ namespace FrdReader {
 					
 					for (int i = 0; i < numComponents; ++i)
 					{
-						values[i] = gcnew array<float>(nNodes);
+						values[i] = gcnew array<float>(numAllNodes);
 					}
 
 					for (int i = 0; i < nNodes; ++i)
@@ -302,8 +306,6 @@ namespace FrdReader {
 					}
 
 					Fields->Add(gcnew System::String(name.c_str(), 0, name.size()), ComponentData);
-
-
 				}
 				else
 				{
