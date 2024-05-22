@@ -9,38 +9,30 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfrd", "libfrd\libfrd.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pyfrd", "pyfrd\pyfrd.vcxproj", "{7C60A764-9729-464F-80C0-179EC6C4D857}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrdCommonTest", "FrdCommonTest\FrdCommonTest.csproj", "{E44E5E0E-7840-4F3A-81B1-3E37C5E9B14A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
-		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E9DF25F8-DB4E-4E72-8C86-CAF3A563BB74}.Debug|x64.ActiveCfg = Debug|x64
 		{E9DF25F8-DB4E-4E72-8C86-CAF3A563BB74}.Debug|x64.Build.0 = Debug|x64
-		{E9DF25F8-DB4E-4E72-8C86-CAF3A563BB74}.Debug|x86.ActiveCfg = Debug|Win32
-		{E9DF25F8-DB4E-4E72-8C86-CAF3A563BB74}.Debug|x86.Build.0 = Debug|Win32
 		{E9DF25F8-DB4E-4E72-8C86-CAF3A563BB74}.Release|x64.ActiveCfg = Release|x64
 		{E9DF25F8-DB4E-4E72-8C86-CAF3A563BB74}.Release|x64.Build.0 = Release|x64
-		{E9DF25F8-DB4E-4E72-8C86-CAF3A563BB74}.Release|x86.ActiveCfg = Release|Win32
-		{E9DF25F8-DB4E-4E72-8C86-CAF3A563BB74}.Release|x86.Build.0 = Release|Win32
 		{F2F2B3F7-6FB9-42B3-B0DE-916F72347FEB}.Debug|x64.ActiveCfg = Debug|x64
 		{F2F2B3F7-6FB9-42B3-B0DE-916F72347FEB}.Debug|x64.Build.0 = Debug|x64
-		{F2F2B3F7-6FB9-42B3-B0DE-916F72347FEB}.Debug|x86.ActiveCfg = Debug|Win32
-		{F2F2B3F7-6FB9-42B3-B0DE-916F72347FEB}.Debug|x86.Build.0 = Debug|Win32
 		{F2F2B3F7-6FB9-42B3-B0DE-916F72347FEB}.Release|x64.ActiveCfg = Release|x64
 		{F2F2B3F7-6FB9-42B3-B0DE-916F72347FEB}.Release|x64.Build.0 = Release|x64
-		{F2F2B3F7-6FB9-42B3-B0DE-916F72347FEB}.Release|x86.ActiveCfg = Release|Win32
-		{F2F2B3F7-6FB9-42B3-B0DE-916F72347FEB}.Release|x86.Build.0 = Release|Win32
 		{7C60A764-9729-464F-80C0-179EC6C4D857}.Debug|x64.ActiveCfg = Debug|x64
 		{7C60A764-9729-464F-80C0-179EC6C4D857}.Debug|x64.Build.0 = Debug|x64
-		{7C60A764-9729-464F-80C0-179EC6C4D857}.Debug|x86.ActiveCfg = Debug|Win32
-		{7C60A764-9729-464F-80C0-179EC6C4D857}.Debug|x86.Build.0 = Debug|Win32
 		{7C60A764-9729-464F-80C0-179EC6C4D857}.Release|x64.ActiveCfg = Release|x64
 		{7C60A764-9729-464F-80C0-179EC6C4D857}.Release|x64.Build.0 = Release|x64
-		{7C60A764-9729-464F-80C0-179EC6C4D857}.Release|x86.ActiveCfg = Release|Win32
-		{7C60A764-9729-464F-80C0-179EC6C4D857}.Release|x86.Build.0 = Release|Win32
+		{E44E5E0E-7840-4F3A-81B1-3E37C5E9B14A}.Debug|x64.ActiveCfg = Debug|x64
+		{E44E5E0E-7840-4F3A-81B1-3E37C5E9B14A}.Debug|x64.Build.0 = Debug|x64
+		{E44E5E0E-7840-4F3A-81B1-3E37C5E9B14A}.Release|x64.ActiveCfg = Release|x64
+		{E44E5E0E-7840-4F3A-81B1-3E37C5E9B14A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

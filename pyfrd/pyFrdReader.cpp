@@ -48,22 +48,22 @@ void exportFrdReader(py::module_ m)
     py::bind_map<std::map<int, frd_node>>(m, "FrdNodeMap");
     py::bind_map<std::map<int, frd_element>>(m, "FrdElementMap");
 
-    py::class_<FrdReader>(m, "FrdReader")
+    py::class_<frd_reader>(m, "FrdReader")
         .def(py::init<>())
-        .def("read", &FrdReader::read,
+        .def("read", &frd_reader::read,
             "read(string) -> None\n\n"
             "Display a welcome message.",
             py::arg("frd_path"))
-        .def_property_readonly("num_nodes", &FrdReader::num_nodes,
+        .def_property_readonly("num_nodes", &frd_reader::num_nodes,
             "num_nodes() -> int\n\n"
             "Get number of nodes.")
-        .def_readonly("nodes", &FrdReader::mNodes,
+        .def_readonly("nodes", &frd_reader::mNodes,
             "nodes\n\n"
             "Node data.")
-        .def_readonly("elements", &FrdReader::mElements,
+        .def_readonly("elements", &frd_reader::mElements,
             "elements\n\n"
             "Element data.")
-        .def_readonly("values", &FrdReader::mValues,
+        .def_readonly("values", &frd_reader::mValues,
             "values\n\n"
             "Result data.")
         ;

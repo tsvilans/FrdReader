@@ -39,7 +39,7 @@ struct frd_results_block
 	int format, numComponents, ictype, nstep;
 };
 
-class FrdReader
+class frd_reader
 {
 public:
 	int get_line(char* ptr, char* end);

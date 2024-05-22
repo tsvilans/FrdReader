@@ -6,7 +6,7 @@
 #include <pybind11/functional.h>
 #include <format>
 
-#include "FrdReader.h"
+#include "frd_reader.h"
 
 namespace py = pybind11;
 

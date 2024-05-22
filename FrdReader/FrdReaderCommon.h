@@ -4,77 +4,12 @@
 #include <string>
 #include <map>
 
+#include "frd_reader.h"
+
 using namespace System;
 using System::Runtime::InteropServices::Marshal;
 using System::Collections::Generic::List;
 using System::Collections::Generic::Dictionary;
-
-#pragma pack (1)
-struct frd_node
-{
-	int id;
-	double x, y, z;
-};
-#pragma pack (0)
-
-#pragma pack (1)
-struct frd_element_header
-{
-	int id, type, group, material;
-};
-#pragma pack (0)
-
-
-inline std::string ltrim(std::string& str)
-{
-	auto it2 = std::find_if(str.begin(), str.end(), [](char ch) { return !std::isspace(static_cast<unsigned char>(ch)); });
-	str.erase(str.begin(), it2);
-	return str;
-}
-
-// trim from end (in place)
-inline std::string rtrim(std::string& s) {
-	s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-		return !std::isspace(ch);
-		}).base(), s.end());
-	return s;
-}
-
-inline std::string trim(std::string s)
-{
-	rtrim(s);
-	ltrim(s);
-	return s;
-}
-
-void parse_result_block(std::ifstream stream)
-{
-	char* buffer = new char[6];
-	stream.read(buffer, 6);
-	std::string name(buffer);
-
-	buffer = new char[12];
-	stream.read(buffer, 12);
-	std::string value(buffer);
-
-	buffer = new char[12];
-	stream.read(buffer, 12);
-	int nNodes = std::stoi(std::string(buffer));
-}
-
-int get_line(char* ptr, char* end)
-{
-	int line_length = 0;
-
-	while (ptr < end)
-	{
-		line_length++;
-		if (*ptr == '\n') break;
-		ptr++;
-	}
-	return line_length;
-}
-
 
 namespace FrdReader {
 
@@ -137,6 +72,64 @@ namespace FrdReader {
 
 		}
 
+		void Read(System::String^ frd_path)
+		{
+			std::string frd_path_c = msclr::interop::marshal_as<std::string>(frd_path);
+			frd_reader reader;
+
+			reader.read(frd_path_c.c_str());
+
+			size_t nNodes = reader.mNodes.size();
+
+			// Add nodes
+			Nodes->Clear();
+			for (auto iter = reader.mNodes.begin(); iter != reader.mNodes.end(); iter++)
+			{
+				int node_id = (int)iter->first;
+				frd_node node = iter->second;
+				Nodes->Add(gcnew FrdNode(node_id, node.x, node.y, node.z));
+				//std::cout << "n : " << node_id << " (" << node.x << ", " << node.y << ", " << node.z << ")" << std::endl;
+			}
+
+			// Add elements
+			Elements->Clear();
+			for (auto iter = reader.mElements.begin(); iter != reader.mElements.end(); iter++)
+			{
+				int element_id = (int)iter->first;
+				frd_element element = iter->second;
+				array<int>^ indices = gcnew array<int>(element.indices.size());
+				for (int i = 0; i < indices->Length; ++i)
+				{
+					indices[i] = element.indices[i];
+				}
+				//std::cout << "e : " << element_id << " (" << indices[0] << ", " << indices[1] << ", " << indices[2] << ", ... )" << std::endl;
+
+				Elements->Add(gcnew FrdElement(element_id, element.header.type, element.header.group, element.header.material, indices));
+			}
+
+			// Add results
+			Fields->Clear();
+			for (auto field = reader.mValues.begin(); field != reader.mValues.end(); field++)
+			{			
+				auto fieldCommon = gcnew Dictionary < System::String^, array<float>^>();
+
+				for (auto component = field->second.begin(); component != field->second.end(); component++)
+				{
+					size_t i = 0;
+					array<float>^ componentValues = gcnew array<float>(nNodes);
+					for (auto value = component->second.begin(); value != component->second.end(); value++)
+					{
+						componentValues[i] = value->second;
+						i++;
+					}
+					fieldCommon->Add(gcnew System::String(component->first.c_str(), 0, component->first.size()), componentValues);
+				}
+
+				Fields->Add(gcnew System::String(field->first.c_str(), 0, field->first.size()), fieldCommon);
+			}
+		}
+
+		/*
 		void Read(System::String^ frd_path)
 		{
 			std::string frd_path_c = msclr::interop::marshal_as<std::string>(frd_path);
@@ -315,6 +308,7 @@ namespace FrdReader {
 
 			delete[] buffer;
 		}
+		*/
 
 		List<FrdNode^>^ Nodes;
 		List<FrdElement^>^ Elements;

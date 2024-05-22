@@ -26,9 +26,6 @@
     <ClCompile Include="pyfrd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\libfrd\FrdReader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pyFrdReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

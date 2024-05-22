@@ -18,7 +18,7 @@
     <ClInclude Include="framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FrdReader.h">
+    <ClInclude Include="frd_reader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="util.h">
@@ -29,7 +29,7 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FrdReader.cpp">
+    <ClCompile Include="frd_reader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

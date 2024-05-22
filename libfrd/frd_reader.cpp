@@ -1,4 +1,4 @@
-#include "FrdReader.h"
+#include "frd_reader.h"
 
 std::map<int, int> ELEMENT_TYPE_MAP {
 	{ 1, 8 },
@@ -15,7 +15,7 @@ std::map<int, int> ELEMENT_TYPE_MAP {
 	{ 12, 3 },
 };
 
-int FrdReader::get_line(char* ptr, char* end)
+int frd_reader::get_line(char* ptr, char* end)
 {
 	int line_length = 0;
 
@@ -28,7 +28,7 @@ int FrdReader::get_line(char* ptr, char* end)
 	return line_length;
 }
 
-void FrdReader::parse_result_block(std::ifstream stream)
+void frd_reader::parse_result_block(std::ifstream stream)
 {
 	char* buffer = new char[6];
 	stream.read(buffer, 6);
@@ -43,7 +43,7 @@ void FrdReader::parse_result_block(std::ifstream stream)
 	int nNodes = std::stoi(std::string(buffer));
 }
 
-void FrdReader::read(const char* frd_path)
+void frd_reader::read(const char* frd_path)
 {
 	std::ifstream stream;
 
@@ -224,14 +224,14 @@ void FrdReader::read(const char* frd_path)
 
 				std::vector<std::map<int, float>> values;
 
+				for (int i = 0; i < numComponents; ++i)
+				{
+					values.push_back(std::map<int, float>());
+				}
+
 				switch (format)
 				{
 				case(1):
-					for (int i = 0; i < numComponents; ++i)
-					{
-						values.push_back(std::map<int, float>());
-					}
-
 					for (int i = 0; i < nNodes; ++i)
 					{
 						int nodeId = std::stoi(std::string(ptr + 3, 10));
@@ -245,17 +245,8 @@ void FrdReader::read(const char* frd_path)
 						ptr += line_length;
 					}
 
-					for (int i = 0; i < numComponents; ++i)
-					{
-						mValues[name][componentNames[i]] = values[i];
-					}
 					break;
 				default:
-					for (int i = 0; i < numComponents; ++i)
-					{
-						values.push_back(std::map<int, float>());
-					}
-
 					for (int i = 0; i < nNodes; ++i)
 					{
 						int nodeId = *(int*)ptr;
@@ -270,12 +261,12 @@ void FrdReader::read(const char* frd_path)
 						}
 					}
 
-					for (int i = 0; i < numComponents; ++i)
-					{
-						mValues[name][componentNames[i]] = values[i];
-					}
-
 					break;
+				}
+
+				for (int i = 0; i < numComponents; ++i)
+				{
+					mValues[name][componentNames[i]] = values[i];
 				}
 			}
 		}
@@ -291,7 +282,7 @@ void FrdReader::read(const char* frd_path)
 	std::cout << "Done." << std::endl;
 }
 
-void FrdReader::read_header(char* &ptr)
+void frd_reader::read_header(char* &ptr)
 {
 	std::string code;
 	code.assign(ptr, 6);
@@ -313,21 +304,21 @@ void FrdReader::read_header(char* &ptr)
 	}
 }
 
-void FrdReader::read_nodes_ascii(char* &ptr)
+void frd_reader::read_nodes_ascii(char* &ptr)
 {
 	for (size_t i = 0; i < nNodes; ++i)
 	{
 		int line_length = get_line(ptr, mEnd);
-		size_t id = std::stoi(std::string(ptr + 3, 10));
-		float x = std::stof(std::string(ptr + 13, 12));
-		float y = std::stof(std::string(ptr + 25, 12));
-		float z = std::stof(std::string(ptr + 37, 12));
+		int id = std::stoi(std::string(ptr + 3, 10));
+		double x = std::stod(std::string(ptr + 13, 12));
+		double y = std::stod(std::string(ptr + 25, 12));
+		double z = std::stod(std::string(ptr + 37, 12));
 
 		mNodes[id] = frd_node(id, x, y, z);
 		ptr += line_length;
 	}
 }
-void FrdReader::read_nodes_binary(char* &ptr)
+void frd_reader::read_nodes_binary(char* &ptr)
 {
 	frd_node* nodes_ptr = (frd_node*)ptr;
 	for (size_t i = 0; i < nNodes; ++i)
@@ -339,7 +330,7 @@ void FrdReader::read_nodes_binary(char* &ptr)
 	std::cout << "Finished reading nodes." << std::endl;
 }
 
-void FrdReader::read_elements_ascii(char* &ptr)
+void frd_reader::read_elements_ascii(char* &ptr)
 {
 	int nIndices;
 	for (size_t i = 0; i < nElements; ++i)
@@ -374,7 +365,7 @@ void FrdReader::read_elements_ascii(char* &ptr)
 		ptr += line_length;
 	}
 }
-void FrdReader::read_elements_binary(char* &ptr)
+void frd_reader::read_elements_binary(char* &ptr)
 {
 	int nIndices;
 	for (int i = 0; i < nElements; ++i)
@@ -396,7 +387,7 @@ void FrdReader::read_elements_binary(char* &ptr)
 	std::cout << "Finished reading elements." << std::endl;
 }
 
-void FrdReader::read_results_ascii(char* &ptr, int nComponents)
+void frd_reader::read_results_ascii(char* &ptr, int nComponents)
 {
 	for (int i = 0; i < nNodes; ++i)
 	{
@@ -411,7 +402,7 @@ void FrdReader::read_results_ascii(char* &ptr, int nComponents)
 
 }
 
-void FrdReader::read_results_binary(char* &ptr, int nComponents)
+void frd_reader::read_results_binary(char* &ptr, int nComponents)
 {
 	//Dictionary<System::String^, array<float>^>^ ComponentData = gcnew Dictionary<System::String^, array<float>^>();
 	//array<array<float>^>^ values = gcnew array<array<float>^>(numComponents);
