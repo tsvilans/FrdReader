@@ -2,6 +2,8 @@
 #define UTIL_H
 
 #include <string>
+#include <algorithm> // for std::find_if
+#include <cctype>    // for std::isspace
 
 inline std::string ltrim(std::string& str)
 {
