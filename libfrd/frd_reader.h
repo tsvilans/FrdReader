@@ -42,8 +42,7 @@ struct frd_results_block
 class frd_reader
 {
 public:
-	int get_line(char* ptr, char* end);
-	void parse_result_block(std::ifstream stream);
+	void parse_result_block(std::ifstream &stream); // Change to reference
 
 	void read(const char* frd_path);
 
@@ -67,11 +66,10 @@ public:
 	std::map<std::string, frd_results_block> mMetadata;
 
 private:
+	int get_line(char* ptr, char* end); // Move to private section
 	char* mEnd;
 	size_t nNodes, nElements;
 
 };
 
-#endif
-
-
+#endif // FRD_READER_H
