@@ -60,8 +60,8 @@ public:
 		{ 12, 3 },
 	};
 
-	int get_line(char* ptr, char* end);
 	void parse_result_block(std::ifstream stream);
+
 
 	void read(const char* frd_path);
 
@@ -86,6 +86,7 @@ public:
 	std::map<int, std::map<std::string, frd_results_block>> mMetadata;
 
 private:
+	int get_line(char* ptr, char* end); // Move to private section
 	char* mEnd;
 	size_t nNodes, nElements;
 
@@ -200,6 +201,4 @@ private:
 
 };
 
-#endif
-
-
+#endif // FRD_READER_H

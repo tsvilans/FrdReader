@@ -1,6 +1,5 @@
 #include "pyFrdReader.h"
 
-
 void exportFrdReader(py::module_ m)
 {
     py::class_<frd_node>(m, "FrdNode")
@@ -11,10 +10,11 @@ void exportFrdReader(py::module_ m)
         .def_readonly("z", &frd_node::z)
         .def("__repr__",
             [](const frd_node& node) {
-                return std::format("FrdNode ({}, {:.3f} {:.3f} {:.3f})", node.id, node.x, node.y, node.z);
+                std::ostringstream oss;
+                oss << "FrdNode (" << node.id << ", " << std::fixed << std::setprecision(3) << node.x << " " << node.y << " " << node.z << ")";
+                return oss.str();
             }
-        )
-        ;
+        );
 
     py::class_<frd_element>(m, "FrdElement")
         .def(py::init<>())
@@ -25,25 +25,29 @@ void exportFrdReader(py::module_ m)
         .def_readonly("indices", &frd_element::indices)
         .def("__repr__",
             [](const frd_element& element) {
-                return std::format("FrdElement ({}, {} nodes)", element.header.id, element.indices.size());
+                std::ostringstream oss;
+                oss << "FrdElement (" << element.header.id << ", " << element.indices.size() << " nodes)";
+                return oss.str();
             }
         )
-        ;
-/*
+
+        .def_readonly("indices", &frd_element::indices);
+
     py::class_<frd_results_block>(m, "FrdResultsHeader")
         .def(py::init<>())
-        //.def_property_readonly("name", &frd_results_block::name)
-        //.def_property_readonly("format", &frd_results_block::format)
-        //.def_property_readonly("ictype", &frd_results_block::ictype)
-        //.def_property_readonly("num_components", &frd_results_block::numComponents)
-        //.def_property_readonly("num_step", &frd_results_block::nstep)
+        .def_property_readonly("name", [](const frd_results_block& header) { return header.name; })
+        .def_property_readonly("format", [](const frd_results_block& header) { return header.format; })
+        .def_property_readonly("ictype", [](const frd_results_block& header) { return header.ictype; })
+        .def_property_readonly("num_components", [](const frd_results_block& header) { return header.numComponents; })
+        .def_property_readonly("num_step", [](const frd_results_block& header) { return header.nstep; })
         .def("__repr__",
             [](const frd_results_block& header) {
-                return std::format("FrdResultsHeader ({})", header.name);
+                std::ostringstream oss;
+                oss << "FrdResultsHeader (" << header.name << ")";
+                return oss.str();
             }
-        )
-        ;
-*/
+        );
+
     py::bind_map<std::map<int, frd_node>>(m, "FrdNodeMap");
     py::bind_map<std::map<int, frd_element>>(m, "FrdElementMap");
     //py::bind_map<std::map<std::string, frd_results_block>>(m, "FrdResultsHeaderMap");
@@ -65,6 +69,5 @@ void exportFrdReader(py::module_ m)
             "Element data.")
         .def_readonly("values", &frd_reader::mValues,
             "values\n\n"
-            "Result data.")
-        ;
+            "Result data.");
 }

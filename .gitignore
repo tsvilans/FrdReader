@@ -1,3 +1,7 @@
+# Build and package directories
+build
+pyfrd_package
+
 # Prerequisites
 *.d
 
