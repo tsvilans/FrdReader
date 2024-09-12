@@ -22,31 +22,31 @@ void exportFrdReader(py::module_ m)
         .def_property_readonly("type", [](frd_element const& e) { return e.header.type; })
         .def_property_readonly("group", [](frd_element const& e) { return e.header.group; })
         .def_property_readonly("material", [](frd_element const& e) { return e.header.material; })
+        .def_readonly("indices", &frd_element::indices)
         .def("__repr__",
             [](const frd_element& element) {
                 return std::format("FrdElement ({}, {} nodes)", element.header.id, element.indices.size());
             }
         )
-        .def_readonly("indices", &frd_element::indices)
         ;
-
+/*
     py::class_<frd_results_block>(m, "FrdResultsHeader")
         .def(py::init<>())
-        .def_property_readonly("name", &frd_results_block::name)
-        .def_property_readonly("format", &frd_results_block::format)
-        .def_property_readonly("ictype", &frd_results_block::ictype)
-        .def_property_readonly("num_components", &frd_results_block::numComponents)
-        .def_property_readonly("num_step", &frd_results_block::nstep)
+        //.def_property_readonly("name", &frd_results_block::name)
+        //.def_property_readonly("format", &frd_results_block::format)
+        //.def_property_readonly("ictype", &frd_results_block::ictype)
+        //.def_property_readonly("num_components", &frd_results_block::numComponents)
+        //.def_property_readonly("num_step", &frd_results_block::nstep)
         .def("__repr__",
             [](const frd_results_block& header) {
                 return std::format("FrdResultsHeader ({})", header.name);
             }
         )
-        .def_readonly("indices", &frd_element::indices)
         ;
-
+*/
     py::bind_map<std::map<int, frd_node>>(m, "FrdNodeMap");
     py::bind_map<std::map<int, frd_element>>(m, "FrdElementMap");
+    //py::bind_map<std::map<std::string, frd_results_block>>(m, "FrdResultsHeaderMap");
 
     py::class_<frd_reader>(m, "FrdReader")
         .def(py::init<>())

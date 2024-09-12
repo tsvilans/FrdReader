@@ -1,7 +1,6 @@
 #include "frd_reader.h"
 
-
-int frd_reader::get_line(char* ptr, char* end)
+int frd_reader2::get_line(char* ptr, char* end)
 {
 	int line_length = 0;
 
@@ -14,7 +13,7 @@ int frd_reader::get_line(char* ptr, char* end)
 	return line_length;
 }
 
-void frd_reader::parse_result_block(std::ifstream stream)
+void frd_reader2::parse_result_block(std::ifstream stream)
 {
 	char* buffer = new char[6];
 	stream.read(buffer, 6);
@@ -29,10 +28,9 @@ void frd_reader::parse_result_block(std::ifstream stream)
 	int nNodes = std::stoi(std::string(buffer));
 }
 
-void frd_reader::read(const char* frd_path)
+void frd_reader2::read(const char* frd_path)
 {
 	std::ifstream stream;
-
 	stream.open(frd_path, std::ios::binary);
 
 	// Get length of file
@@ -53,10 +51,56 @@ void frd_reader::read(const char* frd_path)
 	mEnd = ptr + length * sizeof(char);
 	bool kill = false;
 
+
+	/*
+	The results buffer can just be a 2D array.
+	
+	                                    |STEP 1
+	                                    |DISP                   |TOSTRAIN
+	node id     |X      |Y      |Z      |DX     |DY     |DZ     |EXX    |EYY
+	------------|-------|-------|-------|-------|-------|-------|-------|-------|
+	11
+	12
+	13
+	14
+	
+	To find address of a node, it is the buffer start plus 
+	the total step + field + component number offset (next row).
+	
+	*/
+
+	// Scan number of datasets and number of values
+
+	int line_length = 0;
+	int channels = 4; // node_id, X, Y, and Z
+	std::vector<size_t> dataset_positions;
+
+	while (ptr < mEnd && !kill)
+	{
+		line_length = get_line(ptr, mEnd);
+		if (line_length < 6)
+		{
+			ptr += line_length;
+			continue;
+		}
+
+		// Get block code
+		std::string code(ptr, 6);
+		ltrim(code);
+		rtrim(code);
+
+		// End of file!
+		if (std::strcmp(code.c_str(), "9999") == 0) break;
+
+
+	}
+
+	// Reset pointer to beginning
+	ptr = buffer;
 	while (ptr < mEnd && !kill)
 	{
 		// read buffer until next linebreak
-		int line_length = get_line(ptr, mEnd);
+		line_length = get_line(ptr, mEnd);
 
 		// If not enough characters to read a code...
 		if (line_length < 6)
@@ -67,8 +111,6 @@ void frd_reader::read(const char* frd_path)
 		std::string code(ptr, 6);
 		ltrim(code);
 		rtrim(code);
-
-		//std::cout << "Code: " << code << std::endl;
 
 		if (std::strcmp(code.c_str(), "9999") == 0)
 		{
@@ -82,8 +124,8 @@ void frd_reader::read(const char* frd_path)
 		}
 		else if (std::strcmp(code.c_str(), "2C") == 0) // nodes
 		{
-			nNodes = std::stoi(std::string(ptr + 6, 30));
-			std::cout << nNodes << " nodes found." << std::endl;
+			num_nodes = std::stoi(std::string(ptr + 6, 30));
+			std::cout << num_nodes << " nodes found." << std::endl;
 
 			int format = std::stoi(std::string(ptr + 36, 38));
 
@@ -100,8 +142,8 @@ void frd_reader::read(const char* frd_path)
 		}
 		else if (std::strcmp(code.c_str(), "3C") == 0) // element block
 		{
-			nElements = std::stoi(std::string(ptr + 6, 30));
-			std::cout << nElements << " elements found." << std::endl;
+			num_elements = std::stoi(std::string(ptr + 6, 30));
+			std::cout << num_elements << " elements found." << std::endl;
 
 			int format = std::stoi(std::string(ptr + 36, 38));
 
@@ -135,7 +177,7 @@ void frd_reader::read(const char* frd_path)
 				float value = std::stof(std::string(ptr + 12, 12));
 				int nValues = std::stoi(std::string(ptr + 24, 12));
 
-				if (nNodes != nValues)
+				if (num_nodes != nValues)
 				{
 					std::cout << "Number of values doesn't correspond to number of nodes...\nThis is very confusing. Breaking..." << std::endl;
 					break;
@@ -152,13 +194,13 @@ void frd_reader::read(const char* frd_path)
 				int format = std::stoi(std::string(ptr + 73, 2));
 
 
-				//std::cout << "icType: " << icType << ", nStep: " << nStep << ", analysis: " << analysis << ", format: " << format << std::endl;
+				std::cout << "icType: " << icType << ", nStep: " << nStep << ", analysis: " << analysis << ", format: " << format << std::endl;
 
 				// Next line, e.g.  -4  TOSTRAIN    6    1
 				ptr += line_length;
 				line_length = get_line(ptr, mEnd);
 
-				std::string name (ptr + 5, 8);
+				std::string name(ptr + 5, 8);
 				ltrim(name);
 				rtrim(name);
 
@@ -174,7 +216,7 @@ void frd_reader::read(const char* frd_path)
 				header.nstep = nStep;
 
 				mMetadata[nStep][name] = header;
-				//std::cout << name << ", num components: " << numComponents << ", type: " << irType << std::endl;
+				std::cout << name << ", num components: " << numComponents << ", type: " << irType << std::endl;
 
 				ptr += line_length;
 
@@ -184,7 +226,7 @@ void frd_reader::read(const char* frd_path)
 				{
 					line_length = get_line(ptr, mEnd);
 
-					std::string componentName (ptr + 5, 8);
+					std::string componentName(ptr + 5, 8);
 					ltrim(componentName);
 					rtrim(componentName);
 
@@ -218,7 +260,7 @@ void frd_reader::read(const char* frd_path)
 				switch (format)
 				{
 				case(1):
-					for (int i = 0; i < nNodes; ++i)
+					for (int i = 0; i < num_nodes; ++i)
 					{
 						int nodeId = std::stoi(std::string(ptr + 3, 10));
 
@@ -233,7 +275,7 @@ void frd_reader::read(const char* frd_path)
 
 					break;
 				default:
-					for (int i = 0; i < nNodes; ++i)
+					for (int i = 0; i < num_nodes; ++i)
 					{
 						int nodeId = *(int*)ptr;
 
@@ -268,13 +310,109 @@ void frd_reader::read(const char* frd_path)
 	std::cout << "Done." << std::endl;
 }
 
-void frd_reader::read_header(char* &ptr)
+int frd_reader2::get(size_t step_id, std::string field, std::string component, size_t node_id, double &result)
+{
+	size_t step_offset, field_offset, component_offset;
+	for (size_t i = 0; i < step_ids.size(); ++i)
+	{
+		if (step_ids[i] == step_id)
+		{
+			step_offset = step_offsets[i];
+		}
+		break;
+	}
+
+	for (size_t i = 0; i < field_names.size(); ++i)
+	{
+		if (strcmp(field_names[i].c_str(), field.c_str()) == 0)
+		{
+			field_offset = field_offsets[i];
+		}
+		break;
+	}
+
+	for (size_t i = 0; i < component_names.size(); ++i)
+	{
+		if (strcmp(component_names[i].c_str(), component.c_str()) == 0)
+		{
+			component_offset = component_offsets[i];
+		}
+		break;
+	}
+
+	if (step_offset < 1 || field_offset < 1 || component_offset < 1)
+		return -1;
+
+	size_t i = 0;
+	while (i < num_nodes)
+	{
+		if (static_cast<size_t>(data[i * row_step]) == node_id)
+		{
+			result = data[i * row_step + step_offset + field_offset + component_offset];
+			return 0;
+		}
+		i++;
+	}
+
+	return -1;
+}
+
+int frd_reader2::get(size_t step_id, std::string field, std::string component, std::vector<size_t> node_ids, std::vector<double> results)
+{
+
+	size_t step_offset, field_offset, component_offset;
+	for (size_t i = 0; i < step_ids.size(); ++i)
+	{
+		if (step_ids[i] == step_id)
+		{
+			step_offset = step_offsets[i];
+		}
+		break;
+	}
+
+	for (size_t i = 0; i < field_names.size(); ++i)
+	{
+		if (strcmp(field_names[i].c_str(), field.c_str()) == 0)
+		{
+			field_offset = field_offsets[i];
+		}
+		break;
+	}
+
+	for (size_t i = 0; i < component_names.size(); ++i)
+	{
+		if (strcmp(component_names[i].c_str(), component.c_str()) == 0)
+		{
+			component_offset = component_offsets[i];
+		}
+		break;
+	}
+
+	if (step_offset < 1 || field_offset < 1 || component_offset < 1)
+		return -1;
+
+	size_t i = 0;
+	for (int j = 0; j < node_ids.size(); ++j)
+	{
+		while (i < num_nodes)
+		{
+			if (static_cast<size_t>(data[i * row_step]) == node_ids[j])
+			{
+				results.push_back(data[i * row_step + step_offset + field_offset + component_offset]);
+				return 0;
+			}
+			i++;
+		}
+	}
+
+	return -1;
+}
+
+void frd_reader2::read_header(char*& ptr)
 {
 	std::string code;
 	code.assign(ptr, 6);
 	ltrim(code);
-
-	std::cout << "read_header()" << std::endl;
 
 	while (std::strcmp(code.c_str(), "1U") == 0)
 	{
@@ -290,9 +428,9 @@ void frd_reader::read_header(char* &ptr)
 	}
 }
 
-void frd_reader::read_nodes_ascii(char* &ptr)
+void frd_reader2::read_nodes_ascii(char*& ptr)
 {
-	for (size_t i = 0; i < nNodes; ++i)
+	for (size_t i = 0; i < num_nodes; ++i)
 	{
 		int line_length = get_line(ptr, mEnd);
 		int id = std::stoi(std::string(ptr + 3, 10));
@@ -304,22 +442,22 @@ void frd_reader::read_nodes_ascii(char* &ptr)
 		ptr += line_length;
 	}
 }
-void frd_reader::read_nodes_binary(char* &ptr)
+void frd_reader2::read_nodes_binary(char*& ptr)
 {
 	frd_node* nodes_ptr = (frd_node*)ptr;
-	for (size_t i = 0; i < nNodes; ++i)
+	for (size_t i = 0; i < num_nodes; ++i)
 	{
 		mNodes[nodes_ptr[i].id] = nodes_ptr[i];
 	}
 
-	ptr += nNodes * sizeof(frd_node);
+	ptr += num_nodes * sizeof(frd_node);
 	std::cout << "Finished reading nodes." << std::endl;
 }
 
-void frd_reader::read_elements_ascii(char* &ptr)
+void frd_reader2::read_elements_ascii(char*& ptr)
 {
 	int nIndices;
-	for (size_t i = 0; i < nElements; ++i)
+	for (size_t i = 0; i < num_elements; ++i)
 	{
 		int line_length = get_line(ptr, mEnd);
 		int lineId = std::stoi(std::string(ptr, 3));
@@ -351,10 +489,10 @@ void frd_reader::read_elements_ascii(char* &ptr)
 		ptr += line_length;
 	}
 }
-void frd_reader::read_elements_binary(char* &ptr)
+void frd_reader2::read_elements_binary(char*& ptr)
 {
 	int nIndices;
-	for (int i = 0; i < nElements; ++i)
+	for (int i = 0; i < num_elements; ++i)
 	{
 		frd_element_header header = *(frd_element_header*)ptr;
 		ptr += sizeof(frd_element_header);
@@ -373,9 +511,9 @@ void frd_reader::read_elements_binary(char* &ptr)
 	std::cout << "Finished reading elements." << std::endl;
 }
 
-void frd_reader::read_results_ascii(char* &ptr, int nComponents)
+void frd_reader2::read_results_ascii(char*& ptr, int nComponents)
 {
-	for (int i = 0; i < nNodes; ++i)
+	for (int i = 0; i < num_nodes; ++i)
 	{
 		int line_length = get_line(ptr, mEnd);
 		std::string line(ptr, line_length);
@@ -388,7 +526,7 @@ void frd_reader::read_results_ascii(char* &ptr, int nComponents)
 
 }
 
-void frd_reader::read_results_binary(char* &ptr, int nComponents)
+void frd_reader2::read_results_binary(char*& ptr, int nComponents)
 {
 	//Dictionary<System::String^, array<float>^>^ ComponentData = gcnew Dictionary<System::String^, array<float>^>();
 	//array<array<float>^>^ values = gcnew array<array<float>^>(numComponents);
@@ -398,7 +536,7 @@ void frd_reader::read_results_binary(char* &ptr, int nComponents)
 		//values[i] = gcnew array<float>(numAllNodes);
 	}
 
-	for (int i = 0; i < nNodes; ++i)
+	for (int i = 0; i < num_nodes; ++i)
 	{
 		int nodeId = *(int*)ptr;
 		//int nodeIndex = nodeMap[nodeId];

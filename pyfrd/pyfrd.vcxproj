@@ -98,6 +98,7 @@
     <ClInclude Include="pyFrdReader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\libfrd\frd_reader.cpp" />
     <ClCompile Include="pyfrd.cpp" />
     <ClCompile Include="pyFrdReader.cpp" />
   </ItemGroup>

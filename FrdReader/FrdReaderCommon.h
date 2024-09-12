@@ -54,7 +54,7 @@ namespace FrdReader {
 			Nodes = gcnew List<FrdNode^>();
 			Elements = gcnew List<FrdElement^>();
 			HeaderData = gcnew List<System::String^>();
-			Fields = gcnew Dictionary < System::String^, Dictionary<System::String^, array<float>^>^>();
+			Fields = gcnew Dictionary < int, Dictionary < System::String^, Dictionary<System::String^, array<float>^>^>^>();
 			ElementTypeMap = gcnew Dictionary<int, int>();
 
 			ElementTypeMap[1] = 8;
@@ -109,23 +109,28 @@ namespace FrdReader {
 
 			// Add results
 			Fields->Clear();
-			for (auto field = reader.mValues.begin(); field != reader.mValues.end(); field++)
-			{			
-				auto fieldCommon = gcnew Dictionary < System::String^, array<float>^>();
-
-				for (auto component = field->second.begin(); component != field->second.end(); component++)
+			for (auto step = reader.mValues.begin(); step != reader.mValues.end(); step++)
+			{
+				auto stepCommon = gcnew Dictionary < System::String^, Dictionary < System::String^, array<float>^>^>();
+				for (auto field = step->second.begin(); field != step->second.end(); field++)
 				{
-					size_t i = 0;
-					array<float>^ componentValues = gcnew array<float>(nNodes);
-					for (auto value = component->second.begin(); value != component->second.end(); value++)
-					{
-						componentValues[i] = value->second;
-						i++;
-					}
-					fieldCommon->Add(gcnew System::String(component->first.c_str(), 0, component->first.size()), componentValues);
-				}
+					auto fieldCommon = gcnew Dictionary < System::String^, array<float>^>();
 
-				Fields->Add(gcnew System::String(field->first.c_str(), 0, field->first.size()), fieldCommon);
+					for (auto component = field->second.begin(); component != field->second.end(); component++)
+					{
+						size_t i = 0;
+						array<float>^ componentValues = gcnew array<float>(nNodes);
+						for (auto value = component->second.begin(); value != component->second.end(); value++)
+						{
+							componentValues[i] = value->second;
+							i++;
+						}
+						fieldCommon->Add(gcnew System::String(component->first.c_str(), 0, component->first.size()), componentValues);
+					}
+
+					stepCommon->Add(gcnew System::String(field->first.c_str(), 0, field->first.size()), fieldCommon);
+				}
+				Fields->Add(step->first, stepCommon);
 			}
 		}
 
@@ -313,7 +318,7 @@ namespace FrdReader {
 		List<FrdNode^>^ Nodes;
 		List<FrdElement^>^ Elements;
 		List<System::String^>^ HeaderData;
-		Dictionary<System::String^, Dictionary<System::String^, array<float>^>^>^ Fields;
+		Dictionary < int, Dictionary < System::String^, Dictionary<System::String^, array<float>^>^>^>^ Fields;
 		Dictionary<int, int>^ ElementTypeMap;
 
 	};
