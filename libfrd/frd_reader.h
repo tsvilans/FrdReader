@@ -1,14 +1,17 @@
 #ifndef FRD_READER_H
 #define FRD_READER_H
 
-#include "util.h"
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <string>
-#include <map>
+#include <cstring>    // for std::strcmp
+#include <iostream>   // for std::cout
+#include <fstream>    // for std::ifstream
+#include <map>        // for std::map
+#include <vector>     // for std::vector
+#include <algorithm>  // for std::find_if
+#include <cctype>     // for std::isspace
+#include <string>     // for std::string, std::stoi, std::stof
+#include "util.h"  // Ensure this is included for ltrim and rtrim
 
-#pragma pack (1)
+#pragma pack (push, 1)
 struct frd_node
 {
 	int id;
@@ -18,14 +21,14 @@ struct frd_node
 
 	frd_node(int _id, double _x, double _y, double _z) : id(_id), x(_x), y(_y), z(_z) { }
 };
-#pragma pack (0)
+#pragma pack (pop)
 
-#pragma pack (1)
+#pragma pack (push, 1)
 struct frd_element_header
 {
 	int id, type, group, material;
 };
-#pragma pack (0)
+#pragma pack (pop)
 
 struct frd_element
 {
@@ -60,7 +63,7 @@ public:
 		{ 12, 3 },
 	};
 
-	void parse_result_block(std::ifstream stream);
+	void parse_result_block(std::ifstream& stream);
 
 
 	void read(const char* frd_path);

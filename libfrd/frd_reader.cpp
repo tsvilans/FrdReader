@@ -1,15 +1,4 @@
-#include <cstring>    // for std::strcmp
-#include <iostream>   // for std::cout
-#include <fstream>    // for std::ifstream
-#include <map>        // for std::map
-#include <vector>     // for std::vector
-#include <algorithm>  // for std::find_if
-#include <cctype>     // for std::isspace
-#include <string>     // for std::string, std::stoi, std::stof
-
 #include "frd_reader.h"
-#include "util.h"  // Ensure this is included for ltrim and rtrim
-
 
 int frd_reader::get_line(char* ptr, char* end) {
     int line_length = 0;
@@ -156,7 +145,7 @@ void frd_reader::read(const char* frd_path) {
                 header.ictype = icType;
                 header.nstep = nStep;
 
-                mMetadata[name] = header;
+                mMetadata[nStep][name] = header;
                 //std::cout << name << ", num components: " << numComponents << ", type: " << irType << std::endl;
 
                 ptr += line_length;
@@ -220,7 +209,7 @@ void frd_reader::read(const char* frd_path) {
                 }
 
                 for (int i = 0; i < numComponents; ++i) {
-                    mValues[name][componentNames[i]] = values[i];
+                    mValues[nStep][name][componentNames[i]] = values[i];
                 }
             }
         } else {
