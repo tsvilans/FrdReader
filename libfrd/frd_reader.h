@@ -60,7 +60,7 @@ public:
 		{ 12, 3 },
 	};
 
-	void parse_result_block(std::ifstream stream);
+	void parse_result_block(std::ifstream &stream);
 
 
 	void read(const char* frd_path);
@@ -81,9 +81,15 @@ public:
 	std::map<size_t, frd_node> mNodes;
 	std::map<size_t, frd_element> mElements;
 
-	std::map<int, std::map<std::string, std::map<std::string, std::map<int, float>>>> mValues;
-	//std::map<int, std::map<std::string, std::map<std::string, std::vector<float>>>> mValues;
-	std::map<int, std::map<std::string, frd_results_block>> mMetadata;
+	// std::map<int, std::map<std::string, std::map<std::string, std::map<int, float>>>> mValues;
+	// //std::map<int, std::map<std::string, std::map<std::string, std::vector<float>>>> mValues;
+	// std::map<int, std::map<std::string, frd_results_block>> mMetadata;
+
+	// Updated mValues and mMetadata with std::string as the first key
+	std::map<std::string, std::map<std::string, std::map<int, float>>> mValues;
+	std::map<std::string, frd_results_block> mMetadata;
+
+
 
 private:
 	int get_line(char* ptr, char* end); // Move to private section
@@ -154,7 +160,7 @@ public:
 	};
 
 	int get_line(char* ptr, char* end);
-	void parse_result_block(std::ifstream stream);
+	void parse_result_block(std::ifstream &stream);
 
 	void read(const char* frd_path);
 
@@ -171,8 +177,9 @@ public:
 
 	//inline size_t num_nodes() { return mNodes.size(); }
 
-	int get(size_t step_id, std::string field, std::string component, size_t node_id, double &result);
-	int get(size_t step_id, std::string field, std::string component, std::vector<size_t> node_ids, std::vector<double> results);
+	int get(size_t step_id, const std::string& field, const std::string& component, size_t node_id, double &result);
+	int get(size_t step_id, const std::string& field, const std::string& component, const std::vector<size_t>& node_ids, std::vector<double> &results);
+
 
 	std::map<size_t, frd_node> mNodes;
 	std::map<size_t, frd_element> mElements;
