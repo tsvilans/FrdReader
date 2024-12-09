@@ -10,9 +10,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Add subdirectories
 add_subdirectory(libfrd)
-add_subdirectory(pyfrd)
 
+add_subdirectory(pyfrd)
 # For Python integration
+find_package(pybind11)
 find_package(Python3 COMPONENTS Development REQUIRED)
 include_directories(${Python3_INCLUDE_DIRS})
 
