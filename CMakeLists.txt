@@ -13,12 +13,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include_directories(libfrd)
 add_subdirectory(libfrd)
 
+# add_subdirectory(pyfrd)
 
-# Do Python integration
-# add_subdirectory(extern/pybind11)
-add_subdirectory(pyfrd)
-
-# include_directories(${Python3_INCLUDE_DIRS})
-# Add the executable (if needed, specify your actual main source file)
-# add_executable(FrdReader main.cpp)
-# target_link_libraries(FrdReader libfrd ${Python3_LIBRARIES})
+# add_subdirectory(FrdReaderCommon)
