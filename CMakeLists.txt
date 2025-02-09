@@ -13,6 +13,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include_directories(libfrd)
 add_subdirectory(libfrd)
 
-# add_subdirectory(pyfrd)
+add_subdirectory(pyfrd)
 
 # add_subdirectory(FrdReaderCommon)

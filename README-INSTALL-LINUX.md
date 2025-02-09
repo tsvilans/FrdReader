@@ -52,7 +52,7 @@ pip install setuptools wheel
    ```
 
 2. **Run the Install Script**:
-   Ensure the `install_python_package.sh` script is executable and run it:
+   Ensure the `install_pyfrd.sh` script is executable and run it:
    ```bash
    chmod +x install_python_package.sh
    ./install_python_package.sh
