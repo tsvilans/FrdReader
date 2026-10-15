@@ -40,6 +40,9 @@ struct frd_results_block
 {
 	std::string name;
 	int format, numComponents, ictype, nstep;
+	double value = 0; // Time for static results, frequency (Hz) for modal results.
+	int mode = 0; // 1PMODE, independent of the result step number.
+	std::string analysis;
 };
 
 

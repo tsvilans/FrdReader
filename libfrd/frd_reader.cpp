@@ -1,4 +1,5 @@
 #include "frd_reader.h"
+#include <stdexcept>
 
 int frd_reader::get_line(char* ptr, char* end) {
     int line_length = 0;
@@ -31,6 +32,15 @@ void frd_reader::parse_result_block(std::ifstream &stream) {
 void frd_reader::read(const char* frd_path) {
     std::ifstream stream;
     stream.open(frd_path, std::ios::binary);
+
+    if (!stream) {
+        throw std::runtime_error(std::string("Cannot open FRD file: ") + frd_path);
+    }
+    mNodes.clear();
+    mElements.clear();
+    mValues.clear();
+    mMetadata.clear();
+    int mode = 0;
 
     // Get length of file
     stream.seekg(0, std::ios::end);
@@ -100,117 +110,123 @@ void frd_reader::read(const char* frd_path) {
                     break;
             }
         } else if (std::strcmp(code.c_str(), "1P") == 0) { // step block
-            int resultId = std::stoi(std::string(ptr + 10, 26));
+            // Modal datasets add GM, GK, HID, SUBC and MODE records between
+            // PSTEP and 100C. Consume each parameter instead of assuming that
+            // the result header immediately follows PSTEP.
+            std::string parameter(ptr + 4, 6);
+            rtrim(parameter);
+            if (parameter == "1PSTEP") mode = 0;
+            if (parameter == "1PMODE") {
+                mode = std::stoi(std::string(ptr + 10, line_length - 10));
+            }
+            ptr += line_length;
+        } else if (code == "100C") {
+            // Extract results header
+            std::string setName(ptr + 6, 6);
+            double value = std::stod(std::string(ptr + 12, 12));
+            int nValues = std::stoi(std::string(ptr + 24, 12));
+
+            if (nNodes != nValues) {
+                std::cout << "Number of values doesn't correspond to number of nodes...\nThis is very confusing. Breaking..." << std::endl;
+                break;
+            }
+
+            std::string text(ptr + 36, 20);
+            int icType = std::stoi(std::string(ptr + 56, 2));
+            int nStep = std::stoi(std::string(ptr + 58, 5));
+            std::string analysis(ptr + 63, 10);
+            int format = std::stoi(std::string(ptr + 73, 2));
+
+            //std::cout << "icType: " << icType << ", nStep: " << nStep << ", analysis: " << analysis << ", format: " << format << std::endl;
+
+            // Next line, e.g.  -4  TOSTRAIN    6    1
             ptr += line_length;
             line_length = get_line(ptr, mEnd);
 
-            // Now the code should be 100C
-            code.assign(ptr, 6);
-            ltrim(code);
+            std::string name(ptr + 5, 8);
+            ltrim(name);
+            rtrim(name);
 
-            if (std::strcmp(code.c_str(), "100C") == 0) { // results block
-                // Extract results header
-                std::string setName(ptr + 6, 6);
-                float value = std::stof(std::string(ptr + 12, 12));
-                int nValues = std::stoi(std::string(ptr + 24, 12));
+            int numComponents = std::stoi(std::string(ptr + 13, 5));
+            int irType = std::stoi(std::string(ptr + 18, 5));
 
-                if (nNodes != nValues) {
-                    std::cout << "Number of values doesn't correspond to number of nodes...\nThis is very confusing. Breaking..." << std::endl;
-                    break;
-                }
+            frd_results_block header;
+            header.name = name;
+            header.format = format;
+            header.numComponents = numComponents;
+            header.ictype = icType;
+            header.nstep = nStep;
+            header.value = value;
+            header.mode = mode;
+            rtrim(analysis);
+            ltrim(analysis);
+            header.analysis = analysis;
 
-                std::string text(ptr + 36, 20);
-                int icType = std::stoi(std::string(ptr + 56, 2));
-                int nStep = std::stoi(std::string(ptr + 58, 5));
-                std::string analysis(ptr + 63, 10);
-                int format = std::stoi(std::string(ptr + 73, 2));
+            mMetadata[nStep][name] = header;
+            //std::cout << name << ", num components: " << numComponents << ", type: " << irType << std::endl;
 
-                //std::cout << "icType: " << icType << ", nStep: " << nStep << ", analysis: " << analysis << ", format: " << format << std::endl;
+            ptr += line_length;
+            std::vector<std::string> componentNames;
 
-                // Next line, e.g.  -4  TOSTRAIN    6    1
-                ptr += line_length;
+            for (int i = 0; i < numComponents; ++i) {
                 line_length = get_line(ptr, mEnd);
 
-                std::string name(ptr + 5, 8);
-                ltrim(name);
-                rtrim(name);
+                std::string componentName(ptr + 5, 8);
+                ltrim(componentName);
+                rtrim(componentName);
 
-                int numComponents = std::stoi(std::string(ptr + 13, 5));
-                int irType = std::stoi(std::string(ptr + 18, 5));
+                componentNames.push_back(componentName);
 
-                frd_results_block header;
-                header.name = name;
-                header.format = format;
-                header.numComponents = numComponents;
-                header.ictype = icType;
-                header.nstep = nStep;
+                int icMenu = std::stoi(std::string(ptr + 13, 5));
+                int icType = std::stoi(std::string(ptr + 18, 5));
+                int icIndex1 = std::stoi(std::string(ptr + 23, 5));
+                int icIndex2 = std::stoi(std::string(ptr + 28, 5));
+                if (line_length > 34) {
+                    int iExist = std::stoi(std::string(ptr + 33, 5));
 
-                mMetadata[nStep][name] = header;
-                //std::cout << name << ", num components: " << numComponents << ", type: " << irType << std::endl;
-
+                    if (iExist > 0) numComponents--;
+                    if (line_length >= 41) {
+                        std::string extraName(ptr + 33, 8);
+                        ltrim(extraName);
+                    }
+                }
                 ptr += line_length;
-                std::vector<std::string> componentNames;
+            }
 
-                for (int i = 0; i < numComponents; ++i) {
-                    line_length = get_line(ptr, mEnd);
+            std::vector<std::map<int, float>> values;
 
-                    std::string componentName(ptr + 5, 8);
-                    ltrim(componentName);
-                    rtrim(componentName);
+            for (int i = 0; i < numComponents; ++i) {
+                values.push_back(std::map<int, float>());
+            }
 
-                    componentNames.push_back(componentName);
+            switch (format) {
+                case(1):
+                    for (int i = 0; i < nNodes; ++i) {
+                        int nodeId = std::stoi(std::string(ptr + 3, 10));
 
-                    int icMenu = std::stoi(std::string(ptr + 13, 5));
-                    int icType = std::stoi(std::string(ptr + 18, 5));
-                    int icIndex1 = std::stoi(std::string(ptr + 23, 5));
-                    int icIndex2 = std::stoi(std::string(ptr + 28, 5));
-                    if (line_length > 34) {
-                        int iExist = std::stoi(std::string(ptr + 33, 5));
+                        for (int j = 0; j < numComponents; ++j) {
+                            values[j][nodeId] = std::stof(std::string(ptr + 13 + 12 * j, 12));
+                        }
 
-                        if (iExist > 0) numComponents--;
-                        if (line_length >= 41) {
-                            std::string extraName(ptr + 33, 8);
-                            ltrim(extraName);
+                        line_length = get_line(ptr, mEnd);
+                        ptr += line_length;
+                    }
+                    break;
+                default:
+                    for (int i = 0; i < nNodes; ++i) {
+                        int nodeId = *(int*)ptr;
+                        ptr += sizeof(int);
+                        for (int j = 0; j < numComponents; ++j) {
+                            float v = *(float*)ptr;
+                            values[j][nodeId] = v;
+                            ptr += sizeof(float);
                         }
                     }
-                    ptr += line_length;
-                }
+                    break;
+            }
 
-                std::vector<std::map<int, float>> values;
-
-                for (int i = 0; i < numComponents; ++i) {
-                    values.push_back(std::map<int, float>());
-                }
-
-                switch (format) {
-                    case(1):
-                        for (int i = 0; i < nNodes; ++i) {
-                            int nodeId = std::stoi(std::string(ptr + 3, 10));
-
-                            for (int j = 0; j < numComponents; ++j) {
-                                values[j][nodeId] = std::stof(std::string(ptr + 13 + 12 * j, 12));
-                            }
-
-                            line_length = get_line(ptr, mEnd);
-                            ptr += line_length;
-                        }
-                        break;
-                    default:
-                        for (int i = 0; i < nNodes; ++i) {
-                            int nodeId = *(int*)ptr;
-                            ptr += sizeof(int);
-                            for (int j = 0; j < numComponents; ++j) {
-                                float v = *(float*)ptr;
-                                values[j][nodeId] = v;
-                                ptr += sizeof(float);
-                            }
-                        }
-                        break;
-                }
-
-                for (int i = 0; i < numComponents; ++i) {
-                    mValues[nStep][name][componentNames[i]] = values[i];
-                }
+            for (int i = 0; i < numComponents; ++i) {
+                mValues[nStep][name][componentNames[i]] = values[i];
             }
         } else {
             std::cout << "Unrecognized code encountered: '" << code << "'" << std::endl;
