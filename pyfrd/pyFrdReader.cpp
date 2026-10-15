@@ -40,6 +40,9 @@ void exportFrdReader(py::module_ m)
         .def_property_readonly("ictype", [](const frd_results_block& header) { return header.ictype; })
         .def_property_readonly("num_components", [](const frd_results_block& header) { return header.numComponents; })
         .def_property_readonly("num_step", [](const frd_results_block& header) { return header.nstep; })
+        .def_readonly("value", &frd_results_block::value)
+        .def_readonly("mode", &frd_results_block::mode)
+        .def_readonly("analysis", &frd_results_block::analysis)
         .def("__repr__",
             [](const frd_results_block& header) {
                 std::ostringstream oss;
@@ -69,5 +72,7 @@ void exportFrdReader(py::module_ m)
             "Element data.")
         .def_readonly("values", &frd_reader::mValues,
             "values\n\n"
-            "Result data.");
+            "Result data.")
+        .def_readonly("metadata", &frd_reader::mMetadata,
+            "Result headers by step and field, including modal frequency and mode number.");
 }
